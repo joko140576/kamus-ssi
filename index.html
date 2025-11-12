@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencarian Kosa Kata</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .search-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .results-section {
+            padding: 30px;
+        }
+
+        .results-count {
+            margin-bottom: 20px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .results-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* STYLING KHUSUS UNTUK KOLOM PENJELASAN */
+        .penjelasan-cell {
+            white-space: normal !important;
+            line-height: 1.6;
+        }
+
+        .penjelasan-content {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .penjelasan-content br {
+            margin-bottom: 8px;
+            display: block;
+            content: "";
+        }
+
+        .gambar-cell img {
+            max-width: 150px;
+            max-height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+            font-size: 1.2em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #3498db;
+            font-size: 1.1em;
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .results-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .penjelasan-content {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Kamus Kosa Kata</h1>
+            <p>Cari dan temukan istilah dengan mudah</p>
+        </div>
+
+        <div class="search-section">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="Masukkan kata kunci (kosa kata, istilah, atau penjelasan)..."
+                    required
+                >
+                <button type="submit" class="search-btn" id="searchBtn">
+                    Cari
+                </button>
+            </form>
+        </div>
+
+        <div class="results-section">
+            <div class="results-count" id="resultsCount"></div>
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpaMtZKDy3GWTNYipvR4bbU2zWoiOCKUCsAEDMfctYDqP73MghwNM-HcJsDY0ctutnZA/exec';
+
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            
+            if (searchTerm) {
+                searchWords(searchTerm);
+            }
+        });
+
+        function searchWords(searchTerm) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            resultsContainer.innerHTML = '<div class="loading">🔍 Mencari data...</div>';
+            resultsCount.textContent = '';
+
+            const url = `${SCRIPT_URL}?method=search&q=${encodeURIComponent(searchTerm)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        displayResults(data.data, searchTerm);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultsContainer.innerHTML = `
+                        <div class="error">
+                            ❌ Terjadi kesalahan: ${error.message}
+                        </div>
+                    `;
+                    resultsCount.textContent = '';
+                });
+        }
+
+        function displayResults(results, searchTerm) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsCount = document.getElementById('resultsCount');
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        😔 Tidak ditemukan hasil untuk "<strong>${searchTerm}</strong>"
+                    </div>
+                `;
+                resultsCount.textContent = '0 hasil ditemukan';
+                return;
+            }
+
+            resultsCount.textContent = `${results.length} hasil ditemukan untuk "${searchTerm}"`;
+
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Abjad</th>
+                            <th>Kosa Kata</th>
+                            <th>Istilah</th>
+                            <th>Penjelasan</th>
+                            <th>Gambar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Di dalam function displayResults, ubah bagian ini:
+    results.forEach(item => {
+        tableHTML += `
+            <tr>
+                <td><strong>${item.abjad || '-'}</strong></td>
+                <td>${item.kosaKata || '-'}</td>
+                <td>${item.istilah || '-'}</td>
+                <td class="penjelasan-cell">
+                    <div class="penjelasan-content">
+        `;
+
+        // Gunakan penjelasan yang sudah diformat dari backend
+        if (item.penjelasan && item.penjelasan !== '-') {
+            tableHTML += item.penjelasan;
+        } else {
+            tableHTML += '-';
+        }
+
+        tableHTML += `
+                    </div>
+                </td>
+            <td class="gambar-cell">
+    `;
+
+    if (item.gambar && item.gambar !== '-' && item.gambar !== '') {
+        tableHTML += `<img src="${item.gambar}" alt="${item.kosaKata || 'Gambar'}" onerror="this.style.display='none'">`;
+    } else {
+        tableHTML += '-';
+    }
+
+    tableHTML += `</td></tr>`;
+});
+            
+
+            tableHTML += `</tbody></table>`;
+            resultsContainer.innerHTML = tableHTML;
+        }
+
+        // Function untuk format penjelasan di frontend (fallback)
+        function formatPenjelasan(text) {
+            if (!text || text === '-') return '-';
+            
+            return text
+                .replace(/\n/g, '<br>')
+                .replace(/- /g, '• ')
+                .replace(/\\n/g, '<br>');
+        }
+
+        // Fokus ke input search saat halaman dimuat
+        document.getElementById('searchInput').focus();
+
+        // Tambahkan function ini di HTML
+function convertGoogleDriveUrl(url) {
+    if (!url || url === '-') return '-';
+    
+    // Cek jika ini Google Drive URL
+    if (url.includes('drive.google.com/file/d/')) {
+        const match = url.match(/\/d\/([^\/]+)/);
+        if (match && match[1]) {
+            return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+    }
+    
+    return url;
+}
+
+// Modifikasi bagian display gambar di HTML
+if (item.gambar && item.gambar !== '-' && item.gambar !== '') {
+    const convertedUrl = convertGoogleDriveUrl(item.gambar);
+    tableHTML += `<img src="${convertedUrl}" alt="${item.kosaKata || 'Gambar'}" onerror="this.style.display='none'">`;
+} else {
+    tableHTML += '-';
+}
+    </script>
+</body>
+</html>
