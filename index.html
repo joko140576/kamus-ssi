@@ -39,6 +39,12 @@
             margin-bottom: 10px;
         }
 
+        .header img {
+          width: 100px;
+          height: 80px;
+          
+        }
+
         .search-section {
             padding: 30px;
             background: #f8f9fa;
@@ -48,11 +54,12 @@
         .search-form {
             display: flex;
             gap: 15px;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
+            flex-wrap: wrap;
         }
 
-        .search-input {
+        .search-input, select {
             flex: 1;
             padding: 15px 20px;
             border: 2px solid #e9ecef;
@@ -62,7 +69,7 @@
             transition: all 0.3s ease;
         }
 
-        .search-input:focus {
+        .search-input:focus, select:focus {
             border-color: #3498db;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
@@ -127,7 +134,6 @@
             border-bottom: none;
         }
 
-        /* STYLING KHUSUS UNTUK KOLOM PENJELASAN */
         .penjelasan-cell {
             white-space: normal !important;
             line-height: 1.6;
@@ -198,17 +204,29 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔍 Kamus Kosa Kata</h1>
+            <img src="ssijoko.png" alt="">
+            <h1>🔍 Kamus PT SSI </h1>
             <p>Cari dan temukan istilah dengan mudah</p>
         </div>
 
         <div class="search-section">
             <form class="search-form" id="searchForm">
+                <select id="categorySelect" class="search-input" required>
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="atm">ATM</option>
+                    <option value="cdm">CDM</option>
+                    <option value="crm">CRM</option>
+                    <option value="cit">CIT</option>
+                    <option value="uang_rupiah">Uang Rupiah</option>
+                    <option value="kasir">Kasir</option>
+                    <option value="managerial">Managerial</option>
+                </select>
+
                 <input 
                     type="text" 
                     class="search-input" 
                     id="searchInput" 
-                    placeholder="Masukkan kata kunci (kosa kata, istilah, atau penjelasan)..."
+                    placeholder="Masukkan kata kunci (istilah atau penjelasan)..."
                     required
                 >
                 <button type="submit" class="search-btn" id="searchBtn">
@@ -224,31 +242,34 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpaMtZKDy3GWTNYipvR4bbU2zWoiOCKUCsAEDMfctYDqP73MghwNM-HcJsDY0ctutnZA/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaMF9BxIxadImPeMbXaqeXzS60O76ctzNKopILSJ1djkZTDCRhBlkKb49ZgMm27rzVGw/exec';
 
         document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const searchTerm = document.getElementById('searchInput').value.trim();
-            
-            if (searchTerm) {
-                searchWords(searchTerm);
+            const category = document.getElementById('categorySelect').value;
+
+            if (searchTerm && category) {
+                searchWords(searchTerm, category);
+            } else {
+                alert('Silakan pilih kategori dan masukkan kata kunci.');
             }
         });
 
-        function searchWords(searchTerm) {
+        function searchWords(searchTerm, category) {
             const resultsContainer = document.getElementById('resultsContainer');
             const resultsCount = document.getElementById('resultsCount');
-            
+
             resultsContainer.innerHTML = '<div class="loading">🔍 Mencari data...</div>';
             resultsCount.textContent = '';
 
-            const url = `${SCRIPT_URL}?method=search&q=${encodeURIComponent(searchTerm)}`;
+            const url = `${SCRIPT_URL}?method=search&q=${encodeURIComponent(searchTerm)}&category=${encodeURIComponent(category)}`;
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        displayResults(data.data, searchTerm);
+                        displayResults(data.data, searchTerm, category);
                     } else {
                         throw new Error(data.message);
                     }
@@ -264,28 +285,27 @@
                 });
         }
 
-        function displayResults(results, searchTerm) {
+        function displayResults(results, searchTerm, category) {
             const resultsContainer = document.getElementById('resultsContainer');
             const resultsCount = document.getElementById('resultsCount');
 
             if (results.length === 0) {
                 resultsContainer.innerHTML = `
                     <div class="no-results">
-                        😔 Tidak ditemukan hasil untuk "<strong>${searchTerm}</strong>"
+                        😔 Tidak ditemukan hasil untuk "<strong>${searchTerm}</strong>" pada kategori "<strong>${category}</strong>"
                     </div>
                 `;
                 resultsCount.textContent = '0 hasil ditemukan';
                 return;
             }
 
-            resultsCount.textContent = `${results.length} hasil ditemukan untuk "${searchTerm}"`;
+            resultsCount.textContent = `${results.length} hasil ditemukan untuk "${searchTerm}" (kategori: ${category})`;
 
             let tableHTML = `
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Abjad</th>
-                            <th>Kosa Kata</th>
+                            <th>Kategori</th>
                             <th>Istilah</th>
                             <th>Penjelasan</th>
                             <th>Gambar</th>
@@ -294,79 +314,45 @@
                     <tbody>
             `;
 
-            // Di dalam function displayResults, ubah bagian ini:
-    results.forEach(item => {
-        tableHTML += `
-            <tr>
-                <td><strong>${item.abjad || '-'}</strong></td>
-                <td>${item.kosaKata || '-'}</td>
-                <td>${item.istilah || '-'}</td>
-                <td class="penjelasan-cell">
-                    <div class="penjelasan-content">
-        `;
+            results.forEach(item => {
+                tableHTML += `
+                    <tr>
+                        <td>${item.kategori || '-'}</td>
+                        <td>${item.istilah || '-'}</td>
+                        <td class="penjelasan-cell">
+                            <div class="penjelasan-content">
+                                ${item.penjelasan || '-'}
+                            </div>
+                        </td>
+                        <td class="gambar-cell">
+                `;
 
-        // Gunakan penjelasan yang sudah diformat dari backend
-        if (item.penjelasan && item.penjelasan !== '-') {
-            tableHTML += item.penjelasan;
-        } else {
-            tableHTML += '-';
-        }
+                if (item.gambar && item.gambar !== '-' && item.gambar !== '') {
+                    const convertedUrl = convertGoogleDriveUrl(item.gambar);
+                    tableHTML += `<img src="${convertedUrl}" alt="${item.istilah || 'Gambar'}" onerror="this.style.display='none'">`;
+                } else {
+                    tableHTML += '-';
+                }
 
-        tableHTML += `
-                    </div>
-                </td>
-            <td class="gambar-cell">
-    `;
-
-    if (item.gambar && item.gambar !== '-' && item.gambar !== '') {
-        tableHTML += `<img src="${item.gambar}" alt="${item.kosaKata || 'Gambar'}" onerror="this.style.display='none'">`;
-    } else {
-        tableHTML += '-';
-    }
-
-    tableHTML += `</td></tr>`;
-});
-            
+                tableHTML += `</td></tr>`;
+            });
 
             tableHTML += `</tbody></table>`;
             resultsContainer.innerHTML = tableHTML;
         }
 
-        // Function untuk format penjelasan di frontend (fallback)
-        function formatPenjelasan(text) {
-            if (!text || text === '-') return '-';
-            
-            return text
-                .replace(/\n/g, '<br>')
-                .replace(/- /g, '• ')
-                .replace(/\\n/g, '<br>');
+        function convertGoogleDriveUrl(url) {
+            if (!url || url === '-') return '-';
+            if (url.includes('drive.google.com/file/d/')) {
+                const match = url.match(/\/d\/([^\/]+)/);
+                if (match && match[1]) {
+                    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                }
+            }
+            return url;
         }
 
-        // Fokus ke input search saat halaman dimuat
         document.getElementById('searchInput').focus();
-
-        // Tambahkan function ini di HTML
-function convertGoogleDriveUrl(url) {
-    if (!url || url === '-') return '-';
-    
-    // Cek jika ini Google Drive URL
-    if (url.includes('drive.google.com/file/d/')) {
-        const match = url.match(/\/d\/([^\/]+)/);
-        if (match && match[1]) {
-            return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-        }
-    }
-    
-    return url;
-}
-
-// Modifikasi bagian display gambar di HTML
-if (item.gambar && item.gambar !== '-' && item.gambar !== '') {
-    const convertedUrl = convertGoogleDriveUrl(item.gambar);
-    tableHTML += `<img src="${convertedUrl}" alt="${item.kosaKata || 'Gambar'}" onerror="this.style.display='none'">`;
-} else {
-    tableHTML += '-';
-}
     </script>
 </body>
 </html>
