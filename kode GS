@@ -1,0 +1,41 @@
+function doGet(e) {
+  const ss = SpreadsheetApp.openById('1YdwMXyFNCrvtM25gMArLhS9QPqj2cDM0OrCTFWgmKbM');
+  const sheet = ss.getSheetByName('Sheet1');
+  const method = e.parameter.method;
+  const q = (e.parameter.q || '').toLowerCase();
+
+  if (method === 'search') {
+    const data = sheet.getDataRange().getValues();
+    const headers = data.shift().map(h => h.toString().trim().toLowerCase());
+    const results = [];
+
+    data.forEach(row => {
+      const rowObj = {};
+      headers.forEach((h, i) => rowObj[h] = row[i]);
+
+      const isiGabungan = [
+        rowObj['kosa kata'],
+        rowObj['istilah'],
+        rowObj['penjelasan']
+      ].join(' ').toLowerCase();
+
+      if (isiGabungan.includes(q)) {
+        results.push({
+          abjad: rowObj['abjad'] || '-',
+          kosaKata: rowObj['kosa kata'] || '-',
+          istilah: rowObj['istilah'] || '-',
+          penjelasan: rowObj['penjelasan'] || '-',
+          gambar: rowObj['gambar'] || '-'
+        });
+      }
+    });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'success', data: results }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'error', message: 'Invalid request' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
