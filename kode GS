@@ -3,6 +3,7 @@ function doGet(e) {
   const sheet = ss.getSheetByName('Sheet1');
   const method = e.parameter.method;
   const q = (e.parameter.q || '').toLowerCase();
+  const category = (e.parameter.category || '').toLowerCase();
 
   if (method === 'search') {
     const data = sheet.getDataRange().getValues();
@@ -19,9 +20,14 @@ function doGet(e) {
         rowObj['penjelasan']
       ].join(' ').toLowerCase();
 
-      if (isiGabungan.includes(q)) {
+      // 🔍 Filter berdasarkan kategori dan keyword
+      const kategoriCocok = category ? (rowObj['kategori'] || '').toLowerCase() === category : true;
+      const keywordCocok = isiGabungan.includes(q);
+
+      if (kategoriCocok && keywordCocok) {
         results.push({
           abjad: rowObj['abjad'] || '-',
+          kategori: rowObj['kategori'] || '-',
           kosaKata: rowObj['kosa kata'] || '-',
           istilah: rowObj['istilah'] || '-',
           penjelasan: rowObj['penjelasan'] || '-',
