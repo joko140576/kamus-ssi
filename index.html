@@ -105,13 +105,20 @@
       font-size: 1.1em;
     }
 
+    /* PERBAIKAN UTAMA: Container untuk tabel yang bisa di-scroll */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      -webkit-overflow-scrolling: touch; /* Untuk scroll yang smooth di iOS */
+    }
+
     .results-table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      min-width: 800px; /* Memberikan lebar minimum agar konten tidak terpotong */
     }
 
     .results-table th {
@@ -122,6 +129,8 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
     }
 
     .results-table td {
@@ -215,6 +224,43 @@
       font-weight: bold;
       cursor: pointer;
     }
+
+    /* Responsif untuk perangkat mobile */
+    @media (max-width: 768px) {
+      .header {
+        padding: 20px;
+      }
+      
+      .header h1 {
+        font-size: 1.8em;
+      }
+      
+      .search-section, .results-section {
+        padding: 20px;
+      }
+      
+      .search-form {
+        gap: 10px;
+      }
+      
+      .search-input, select, .search-btn {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      
+      .results-table th, .results-table td {
+        padding: 10px;
+        font-size: 14px;
+      }
+      
+      .penjelasan-content {
+        font-size: 13px;
+      }
+      
+      .gambar-cell img {
+        max-width: 100px;
+      }
+    }
   </style>
 </head>
 
@@ -223,7 +269,7 @@
     <div class="header">
       <img src="ssijoko.png" alt="Logo SSI">
       <div>
-        <h1>🔍 Kamus PT SSI</h1>
+        <h2>🔍 Kamus PT SSI</h2>
         <p>Cari dan temukan istilah dengan mudah</p>
       </div>
     </div>
@@ -317,16 +363,17 @@
       resultsCount.textContent = `${results.length} hasil ditemukan untuk "${searchTerm}" (kategori: ${category})`;
 
       let tableHTML = `
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th>Kategori</th>
-              <th>Istilah</th>
-              <th>Penjelasan</th>
-              <th>Gambar</th>
-            </tr>
-          </thead>
-          <tbody>`;
+        <div class="table-container">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Kategori</th>
+                <th>Istilah</th>
+                <th>Penjelasan</th>
+                <th>Gambar</th>
+              </tr>
+            </thead>
+            <tbody>`;
 
       results.forEach(item => {
         tableHTML += `
@@ -348,7 +395,7 @@
         tableHTML += `</td></tr>`;
       });
 
-      tableHTML += `</tbody></table>`;
+      tableHTML += `</tbody></table></div>`;
       resultsContainer.innerHTML = tableHTML;
 
       enableImageZoom(); // ✅ Panggil setelah tabel muncul
